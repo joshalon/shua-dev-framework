@@ -5,95 +5,96 @@
 
 ---
 
-## The Three-Tier Command Structure
+## The Organization & Command Structure
 
-This framework implements a three-tier hierarchy for agentic software development. Each tier has a distinct role, and work flows downward through the tiers with increasing specificity.
+This framework implements a structured agentic development organization. Each role has clear responsibilities, and work flows downward with increasing specificity. The CEO is the only human in the loop.
 
-### Tier 1 — Architect (Claude.ai / Desktop / Mobile)
+### CEO / Founder — Shua (Human)
+
+**Responsibility:** Vision, priorities, final approval on all decisions.
+
+The CEO sets the direction, evaluates recommendations from the CTO, approves or rejects architectural plans and orchestrator prompts, and relays instructions between tiers. The CEO is the deliberate human-in-the-loop chokepoint — the only person who can authorize work to flow from the architect tier to the execution tier.
+
+The CEO does not design systems in detail. The CEO does not write code. The CEO does not formulate orchestrator prompts from scratch. The CEO describes what they want, evaluates what the CTO proposes, and says go or no-go.
+
+### CTO / Chief Architect — Claude.ai Agent (Tier 1)
 
 **Role:** Strategic thinking, architecture design, prompt engineering, task definition.
 
-The architect tier is where high-level decisions happen. This is a conversation with an AI advisor (CTO agent, architect agent, or general strategic discussion) that produces:
+**Platform:** Claude.ai web app, Claude desktop app, Claude mobile app — wherever strategic thinking happens. These conversations are often long, exploratory, and reference multiple projects simultaneously. Operates within the "Shua Dev Architect" Claude.ai project with full architectural context uploaded as project knowledge.
 
-- Architecture decisions and design documents
-- Task definitions and prompts for the orchestrator tier
-- Framework refinements and methodology updates
-- Cross-project strategic planning
-- Model and effort level recommendations for specific tasks
+**Key outputs:** Architecture decisions, orchestrator prompts (complete with system state, task scopes, audit criteria, model/effort levels), technical recommendations, framework refinements, cross-project strategic analysis.
 
-The architect does not write code. The architect does not execute. The architect thinks, designs, and formulates precise instructions that flow down to the orchestrator.
+**Key constraint:** The CTO proposes — the CEO disposes. The CTO never executes directly and never makes final decisions unilaterally.
 
-**Platform:** Claude.ai web app, Claude desktop app, Claude mobile app — wherever strategic thinking happens. These conversations are often long, exploratory, and reference multiple projects simultaneously.
+### VP of Engineering — Claude Code Orchestrator (Tier 2)
 
-**Key outputs:** Orchestrator prompts, architecture documents, task specifications, framework updates.
+**Role:** Receive approved tasks from the CTO (via the CEO), plan execution, delegate to engineers, verify through QA, report results.
 
-### Tier 2 — Orchestrator (Claude Code · Terminal)
-
-**Role:** Receive tasks from the architect tier, plan execution, delegate to sub-agents, verify through independent audit agents, report results.
-
-The orchestrator is the project manager. It receives a well-defined task (often formulated in Tier 1), breaks it into scoped sub-tasks, assigns each to a working sub-agent, and gates every result through an independent audit agent. The orchestrator does not write code directly for non-trivial work.
-
-**Platform:** Claude Code CLI running in the terminal, typically inside a specific project directory. The orchestrator loads both the global `~/.claude/` configuration and the project-level `.claude/` configuration.
+**Platform:** Claude Code CLI in the terminal, inside a specific project directory. Loads both global `~/.claude/` configuration and project-level configuration.
 
 **Default model:** claude-opus-4-6 · effort: high (for multi-agent coordination).
 
 **Key behaviors:**
 - Plans before executing (plan mode for any 3+ step task)
-- Delegates all code/config/test work to named sub-agents
-- Gates every sub-agent's work through an independent audit agent
-- Reports results with full transparency (working agent claims vs audit agent findings)
+- Delegates all code/config/test work to Software Engineers (working sub-agents)
+- Gates every result through QA Engineers (audit sub-agents)
+- Reports results with full transparency
 - Never proceeds to task N+1 until task N's audit passes
 
-### Tier 3 — Sub-Agents (Claude Code · Spawned Sessions)
+### Software Engineers — Working Sub-Agents (Tier 3a)
 
-**Role:** Execute specific, well-scoped tasks as delegated by the orchestrator.
+**Role:** Execute specific, well-scoped tasks as delegated by the VP of Engineering.
 
-Sub-agents are the hands. Each one has a single, clear responsibility with explicit constraints on what it may and may not touch. Sub-agents come in two types:
+**Default model:** claude-sonnet-4-6 · effort: medium.
 
-**Working agents** (claude-sonnet-4-6 · effort: medium): Execute the actual work — write code, modify config, run tests, build features. They report back what they did and what the test results were.
+Each engineer has a single, clear responsibility with explicit constraints. They report what they did and what the test results were.
 
-**Audit agents** (claude-sonnet-4-6 · effort: high): Independently verify the working agent's claims. They read the codebase directly (never the working agent's report), run tests independently, and issue a PASS or FAIL verdict. They are the quality gate.
+### QA Engineers — Audit Sub-Agents (Tier 3b)
 
-Working agents and audit agents are always separate sessions. They share no context. This is non-negotiable.
+**Role:** Independently verify Software Engineer output.
 
----
+**Default model:** claude-sonnet-4-6 · effort: high.
 
-## Information Flow
+QA engineers read the codebase directly (never the working engineer's report), run tests independently, and issue a PASS or FAIL verdict. They are always in separate sessions from the engineers they audit. This is non-negotiable.
+
+### Information Flow
 
 ```
-TIER 1 — ARCHITECT (Claude.ai)
+CEO (Shua — Human)
 │
-│  "Refactor session_manager.py to support max_turns config.
-│   Use Sonnet-high for the working agent because the refactor
-│   touches multiple methods. Here's the full prompt..."
+│  "I want to build X" / "Here's what I need"
 │
 ▼
-TIER 2 — ORCHESTRATOR (Claude Code · opus-4-6 · high)
+CTO (Claude.ai architect agent)
 │
-│  Reads global ~/.claude/CLAUDE.md (workflow defaults)
-│  Reads project CLAUDE.md (architecture, current phase)
-│  Reads ~/.claude/lessons.md (cross-project lessons)
-│  Drafts task breakdown, presents plan, gets approval
-│
-├──▶ TASK 1: Working Agent (sonnet-4-6 · medium)
-│       └── Modifies session_manager.py, runs tests
-│
-├──▶ TASK 1: Audit Agent (sonnet-4-6 · high)
-│       └── Reads source directly, runs tests independently
-│       └── Verdict: PASS ✓
-│
-├──▶ TASK 2: Working Agent (sonnet-4-6 · medium)
-│       └── Updates 6 agent configs
-│
-├──▶ TASK 2: Audit Agent (sonnet-4-6 · high)
-│       └── Verifies all 6 configs, runs tests
-│       └── Verdict: PASS ✓
+│  Analyzes, designs, recommends approach
+│  Drafts orchestrator prompt with full specs
+│  "Here's my recommendation and the orchestrator prompt"
 │
 ▼
-REPORT back to human (Shua)
+CEO reviews, approves or adjusts
+│
+│  Relays approved prompt to terminal
 │
 ▼
-LESSONS captured → ~/.claude/lessons.md or project lessons
+VP of Engineering (Claude Code orchestrator · opus · high)
+│
+│  Plans execution, delegates tasks
+│
+├──▶ Software Engineer (sonnet · medium) → executes Task 1
+├──▶ QA Engineer (sonnet · high) → audits Task 1 → PASS/FAIL
+├──▶ Software Engineer (sonnet · medium) → executes Task 2
+├──▶ QA Engineer (sonnet · high) → audits Task 2 → PASS/FAIL
+│
+▼
+VP reports results back to CEO
+│
+▼
+CEO relays to CTO if architectural questions arose
+│
+▼
+Lessons captured → compound learning system
 ```
 
 ---
