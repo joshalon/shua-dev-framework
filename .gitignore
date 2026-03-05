@@ -1,0 +1,7 @@
+lessons.md
+.backup.*
+.env
+.env.*
+*.pyc
+__pycache__/
+.DS_Store

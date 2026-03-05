@@ -1,0 +1,34 @@
+# Cross-Project Lessons Learned
+
+This file captures lessons that apply across all projects. Project-specific lessons belong in each project's own `tasks/lessons.md`.
+
+Format for new entries:
+```
+### [YYYY-MM-DD] | [project or "global"] | [category]
+**What happened:** [Brief description]
+**Root cause:** [Why]
+**Rule:** [Specific, actionable prevention rule]
+**Verified:** [How we confirmed this works, or "pending"]
+```
+
+Categories: architecture, testing, context, delegation, tooling, process
+
+---
+
+### 2026-03-05 | shua-capital | context
+**What happened:** Pre-trim synthesis using abstract principles ("avoid high RSI") had only 50% hit rate. Switching to compressed episodic demonstrations with exact conditions, resolution logic, and verified outcomes improved hit rate to 87%.
+**Root cause:** Abstract principles are insufficient for conditioning LLM behavior. Concrete examples with conditions and outcomes are more reliable.
+**Rule:** Always use compressed episodic demonstrations (condition + resolution + outcome) instead of abstract principles when encoding learned behavior for LLMs.
+**Verified:** Shua Capital Phase 1 research — synthesis hit rate improved from 50% to 87%.
+
+### 2026-03-05 | shua-capital | context
+**What happened:** Memory recall dropped to zero at 34-39% context usage (cycles 50-60). Dubbed the "coherence cliff."
+**Root cause:** Context growth beyond ~34% correlates with measurable reasoning degradation in persistent sessions.
+**Rule:** Set context trim thresholds conservatively (25% for persistent sessions). Always distill before eviction — episodic memory destroyed by trimming cannot be recovered.
+**Verified:** Shua Capital Phase 1 research — 82-cycle trim-only test confirmed trim improves consistency (+10.4) but destroys episodic specifics (-56 pts lesson application) without pre-trim synthesis.
+
+### 2026-03-05 | shua-capital | architecture
+**What happened:** Pattern recognition memory was present in context but the agent didn't consult it. Score: 37.5 (gate was >62.5).
+**Root cause:** Passive availability is not the same as active retrieval. The agent had the information but its reasoning loop didn't include a step to check it.
+**Rule:** When persistent memory or lessons exist, the reasoning loop must include a mandatory scan step (Step 0) that forces active retrieval before decision-making. Passive availability is insufficient.
+**Verified:** Shua Capital Phase 1 — Step 0 mandatory scan improved pattern recognition from 37.5 to 84.4.
